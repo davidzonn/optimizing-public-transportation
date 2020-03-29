@@ -16,6 +16,9 @@ class Producer:
     # Tracks existing topics across all Producer instances
     existing_topics = set([])
 
+    SCHEMA_REGISTRY_URL = "http://localhost:8081/"
+    BOOTSTRAP_SERVERS = "localhost:9092,localhost:9093,localhost:9094"
+
     def __init__(
         self,
         topic_name,
@@ -32,21 +35,24 @@ class Producer:
         self.num_replicas = num_replicas
 
         self.broker_properties = {
-            "bootstrap.servers": "PLAINTEXT://localhost:9092,PLAINTEXT://localhost:9093,PLAINTEXT://localhost:9094",
-            "schema.registry.url": "http://localhost:8081/"
+            "bootstrap.servers": Producer.BOOTSTRAP_SERVERS,
+            "schema.registry.url": Producer.SCHEMA_REGISTRY_URL
         }
+
+        self.admin_client = AdminClient({"bootstrap.servers": Producer.BOOTSTRAP_SERVERS})
 
         # If the topic does not already exist, try to create it
         if self.topic_name not in Producer.existing_topics:
             self.create_topic()
             Producer.existing_topics.add(self.topic_name)
 
-        self.admin_client = AdminClient(self.broker_properties)
         self.producer = AvroProducer(self.broker_properties)
 
     def create_topic(self):
         """Creates the producer topic if it does not already exist"""
-        self.admin_client.create_topics([NewTopic(self.topic_name),])
+        self.admin_client.create_topics([
+            NewTopic(self.topic_name, num_partitions=self.num_partitions, replication_factor=self.num_replicas),
+        ])
 
     def time_millis(self):
         return int(round(time.time() * 1000))
