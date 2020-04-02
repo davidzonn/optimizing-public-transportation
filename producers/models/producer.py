@@ -16,7 +16,7 @@ class Producer:
     # Tracks existing topics across all Producer instances
     existing_topics = set([])
 
-    SCHEMA_REGISTRY_URL = "http://localhost:8081/"
+    SCHEMA_REGISTRY_URL = "http://localhost:8081"
     BOOTSTRAP_SERVERS = "localhost:9092,localhost:9093,localhost:9094"
 
     def __init__(
