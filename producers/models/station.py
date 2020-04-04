@@ -47,11 +47,6 @@ class Station(Producer):
 
     def run(self, train, direction, prev_station_id, prev_direction):
         """Simulates train arrivals at this station"""
-        #
-        #
-        # TODO: Complete this function by producing an arrival message to Kafka
-        #
-        #
         self.producer.produce(
             topic=self.topic_name,
             key={"timestamp": self.time_millis()},
@@ -59,8 +54,8 @@ class Station(Producer):
                "station_id": self.station_id,
                "train_id": train.train_id,
                "direction": direction,
-               "line": self.color,
-               "train_status": train.status,
+               "line": self.color.name,
+               "train_status": train.status.name,
                "prev_station_id": prev_station_id,
                "prev_direction": prev_direction
             },

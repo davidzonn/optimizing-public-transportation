@@ -19,6 +19,8 @@ class Producer:
     SCHEMA_REGISTRY_URL = "http://localhost:8081"
     BOOTSTRAP_SERVERS = "localhost:9092,localhost:9093,localhost:9094"
 
+    admin_client = AdminClient({"bootstrap.servers": BOOTSTRAP_SERVERS})
+
     def __init__(
         self,
         topic_name,
@@ -39,8 +41,6 @@ class Producer:
             "schema.registry.url": Producer.SCHEMA_REGISTRY_URL
         }
 
-        self.admin_client = AdminClient({"bootstrap.servers": Producer.BOOTSTRAP_SERVERS})
-
         # If the topic does not already exist, try to create it
         if self.topic_name not in Producer.existing_topics:
             self.create_topic()
@@ -50,7 +50,7 @@ class Producer:
 
     def create_topic(self):
         """Creates the producer topic if it does not already exist"""
-        self.admin_client.create_topics([
+        Producer.admin_client.create_topics([
             NewTopic(self.topic_name, num_partitions=self.num_partitions, replication_factor=self.num_replicas),
         ])
 
