@@ -29,29 +29,38 @@ class TransformedStation(faust.Record):
     line: str
 
 
-# TODO: Define a Faust Stream that ingests data from the Kafka Connect stations topic and
-#   places it into a new topic with only the necessary information.
 app = faust.App("stations-stream", broker="kafka://localhost:9092", store="memory://")
-# TODO: Define the input Kafka Topic. Hint: What topic did Kafka Connect output to?
-# topic = app.topic("TODO", value_type=Station)
-# TODO: Define the output Kafka Topic
-# out_topic = app.topic("TODO", partitions=1)
-# TODO: Define a Faust Table
-#table = app.Table(
-#    # "TODO",
-#    # default=TODO,
-#    partitions=1,
-#    changelog_topic=out_topic,
-#)
+topic = app.topic("connect_stations", value_type=Station)
+out_topic = app.topic("com.udacity.station.descriptions", partitions=1, value_type=TransformedStation)
+
+table = app.Table(
+   "com.udacity.station.descriptions-table",
+   default=TransformedStation,
+   partitions=1,
+   changelog_topic=out_topic,
+)
 
 
-#
-#
-# TODO: Using Faust, transform input `Station` records into `TransformedStation` records. Note that
-# "line" is the color of the station. So if the `Station` record has the field `red` set to true,
-# then you would set the `line` of the `TransformedStation` record to the string `"red"`
-#
-#
+@app.agent(topic)
+async def transform_station(station_description_events):
+    async for station_description in station_description_events:
+        line = "red" if station_description.red else "green" if station_description.green \
+            else "blue" if station_description.blue else "unknown"
+        transformed_station = TransformedStation(
+            station_description.station_id,
+            station_description.station_name,
+            station_description.order,
+            line
+        )
+        await out_topic.send(key=str(station_description.station_id), value=transformed_station)
+
+
+#Transform into status table for having a single data point per station.
+@app.agent(out_topic)
+async def create_station_summary(transformed_station_events):
+    async for transformed_station in transformed_station_events:
+        #Already copartitioned
+        table[str(transformed_station.station_id)] = transformed_station.value
 
 
 if __name__ == "__main__":
