@@ -60,6 +60,7 @@ class Producer:
     def close(self):
         """Prepares the producer for exit by cleaning up the producer"""
         Producer.existing_topics.remove(self.topic_name)
+        self.producer.close()
 
     def time_millis(self):
         """Use this function to get the key for Kafka Events"""
