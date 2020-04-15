@@ -16,7 +16,7 @@ KSQL_URL = "http://localhost:8088"
 KSQL_STATEMENT = """
 CREATE TABLE turnstile
 WITH (
-    KAFKA_TOPIC = 'com.udacity.turnstile.entries',
+    KAFKA_TOPIC = 'org.chicago.cta.turnstile.entries',
     VALUE_FORMAT = 'AVRO',
     KEY = 'station_id'
 );
